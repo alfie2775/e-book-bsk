@@ -10,7 +10,7 @@ import {
   FormLabel,
   FormControl,
 } from "react-bootstrap";
-import { deleteProduct, editProduct } from "../../redux/actions/products";
+import { deleteProduct } from "../../redux/actions/products";
 import { useDispatch } from "react-redux";
 import { delete_product, edit_product } from "../../api";
 
@@ -24,13 +24,21 @@ const ProductCard = ({ Product }) => {
   const dispatch = useDispatch();
 
   const saveEditedProduct = async (e) => {
-    const res = await edit_product(product);
+    e.preventDefault();
+    const res = await edit_product({
+      ...product,
+      description: product.description
+        .replace(/'/g, "\\'")
+        .replace(/"/g, '\\"'),
+    });
     if (res.error) alert("Try again later");
-    else dispatch(editProduct(product));
+    else dispatch({ type: "EDIT_PRODUCT", payload: product });
+    console.log({ ...product });
+    toggleModal();
   };
 
   const delete_Product = async (e) => {
-    const res = await delete_product(product);
+    const res = await delete_product(product.book_id);
     if (res.error) alert("Try again later");
     else dispatch(deleteProduct(product));
   };
@@ -48,7 +56,10 @@ const ProductCard = ({ Product }) => {
           <p className="product-desc">{Product.description}</p>
           <div className="product-avail">
             <p className="product-stock">Stock: {Product.stock}</p>
-            <p className="product-price">{"Rs. " + Product.price}</p>
+            <p className="product-price">
+              <span className="fa fa-inr fa-lg"></span>
+              {"  " + Product.price}
+            </p>
           </div>
         </div>
       </Col>
@@ -65,7 +76,7 @@ const ProductCard = ({ Product }) => {
       <Modal className="admin-modal" show={isOpen} onHide={toggleModal}>
         <ModalTitle className="modal-title">Edit Product</ModalTitle>
         <ModalBody className="modal-body">
-          <Form className="form">
+          <Form className="form" onSubmit={saveEditedProduct}>
             <FormGroup>
               <FormLabel>Name</FormLabel>
               <FormControl
@@ -137,7 +148,7 @@ const ProductCard = ({ Product }) => {
               ></FormControl>
             </FormGroup>
             <FormGroup>
-              <button onClick={saveEditedProduct}>Save Changes</button>
+              <button type="submit">Save Changes</button>
             </FormGroup>
           </Form>
         </ModalBody>
